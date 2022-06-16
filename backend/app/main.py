@@ -1,10 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import auth
+from app.workers.ingestion import ingest_meals_task
 
-app = FastAPI(title="NutriSuggest API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ingest_meals_task.delay()
+    yield
+
+
+app = FastAPI(title="NutriSuggest API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
