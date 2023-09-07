@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, favourites, ingredients, meal_plans, meals, users
+from app.routers import auth, favourites, ingredients, meal_plans, meals, suggestions, users
 from app.workers.ingestion import ingest_meals_task
 
 
@@ -30,6 +30,7 @@ app.include_router(meals.router)
 app.include_router(favourites.router)
 app.include_router(ingredients.router)
 app.include_router(meal_plans.router)
+app.include_router(suggestions.router)
 
 
 @app.get("/health")
