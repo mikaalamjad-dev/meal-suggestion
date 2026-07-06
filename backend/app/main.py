@@ -1,7 +1,11 @@
+import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("nutrisuggest")
 
 from app.config import settings
 from app.routers import auth, favourites, ingredients, meal_plans, meals, suggestions, users
@@ -31,6 +35,12 @@ app.include_router(favourites.router)
 app.include_router(ingredients.router)
 app.include_router(meal_plans.router)
 app.include_router(suggestions.router)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 @app.get("/health")
