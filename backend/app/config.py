@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     themealdb_base_url: str = "https://www.themealdb.com/api/json/v1/1"
     openfoodfacts_base_url: str = "https://world.openfoodfacts.org/api/v3"
 
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:3000","http://localhost:3001"]
 
 
 settings = Settings()
