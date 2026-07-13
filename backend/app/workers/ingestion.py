@@ -25,6 +25,12 @@ def upsert_meal(db: Session, meal_json: dict) -> Meal:
     meal.thumbnail_url = meal_json.get("strMealThumb")
     db.flush()
 
+    existing_ingredient_ids = {
+        row.ingredient_id
+        for row in db.query(MealIngredient.ingredient_id).filter(MealIngredient.meal_id == meal.id)
+    }
+    seen_ingredient_ids = set(existing_ingredient_ids)
+
     for name, measure in parse_ingredients(meal_json):
         ingredient = db.query(Ingredient).filter(Ingredient.name == name).first()
         if ingredient is None:
@@ -32,13 +38,13 @@ def upsert_meal(db: Session, meal_json: dict) -> Meal:
             db.add(ingredient)
             db.flush()
 
-        link = (
-            db.query(MealIngredient)
-            .filter(MealIngredient.meal_id == meal.id, MealIngredient.ingredient_id == ingredient.id)
-            .first()
-        )
-        if link is None:
-            db.add(MealIngredient(meal_id=meal.id, ingredient_id=ingredient.id, measure=measure))
+        # TheMealDB sometimes lists the same ingredient twice for one meal
+        # (e.g. once as a main ingredient, again as a garnish) — skip repeats.
+        if ingredient.id in seen_ingredient_ids:
+            continue
+        seen_ingredient_ids.add(ingredient.id)
+
+        db.add(MealIngredient(meal_id=meal.id, ingredient_id=ingredient.id, measure=measure))
 
     return meal
 

@@ -14,7 +14,7 @@ services:
 
   celery:
     build: ./backend
-    command: celery -A app.workers.celery_app worker
+    command: celery -A app.workers.celery_app worker --loglevel=info
     depends_on: [redis]
     env_file: ./backend/.env
     environment:

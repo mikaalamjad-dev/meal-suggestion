@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     themealdb_base_url: str = "https://www.themealdb.com/api/json/v1/1"
-    openfoodfacts_base_url: str = "https://world.openfoodfacts.org/api/v3"
+    openfoodfacts_base_url: str = "https://search.openfoodfacts.org"
 
     cors_origins: list[str] = ["http://localhost:3000","http://localhost:3001"]
 
