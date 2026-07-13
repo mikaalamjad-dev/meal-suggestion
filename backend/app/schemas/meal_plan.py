@@ -2,6 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel
 
+from app.schemas.meal import MealSummary
+
 
 class MealPlanItemRequest(BaseModel):
     meal_id: int
@@ -17,6 +19,7 @@ class MealPlanCreateRequest(BaseModel):
 class MealPlanItemResponse(BaseModel):
     meal_id: int
     meal_type: str
+    meal: MealSummary
 
     class Config:
         from_attributes = True

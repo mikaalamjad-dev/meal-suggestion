@@ -9,8 +9,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/ui/page-header";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSuggestions } from "@/hooks/useSuggestions";
 import { api } from "@/lib/api";
+import { MealSummary } from "@/lib/types";
 
 const MEAL_SLOTS = [
   { type: "breakfast", label: "Breakfast", icon: Coffee },
@@ -21,6 +24,7 @@ const MEAL_SLOTS = [
 interface MealPlanItem {
   meal_id: number;
   meal_type: string;
+  meal: MealSummary;
 }
 
 interface MealPlan {
@@ -39,6 +43,7 @@ export default function PlannerPage() {
     queryKey: ["meal-plans", today],
     queryFn: async () => (await api.get<MealPlan[]>("/meal-plans", { params: { date: today } })).data,
   });
+  const { data: suggestions, isLoading: suggestionsLoading } = useSuggestions();
 
   const plan = plans?.[0];
 
@@ -47,7 +52,22 @@ export default function PlannerPage() {
     await api.post("/meal-plans", {
       date: today,
       target_calories: targetCalories === "" ? null : targetCalories,
-      items: plan?.items ?? [],
+      items: (plan?.items ?? []).map(({ meal_id, meal_type }) => ({ meal_id, meal_type })),
+    });
+    queryClient.invalidateQueries({ queryKey: ["meal-plans", today] });
+  }
+
+  async function assignMeal(mealType: string, mealId: number | null) {
+    const items = (plan?.items ?? [])
+      .filter((i) => i.meal_type !== mealType)
+      .map(({ meal_id, meal_type }) => ({ meal_id, meal_type }));
+    if (mealId !== null) {
+      items.push({ meal_id: mealId, meal_type: mealType });
+    }
+    await api.post("/meal-plans", {
+      date: today,
+      target_calories: plan?.target_calories ?? null,
+      items,
     });
     queryClient.invalidateQueries({ queryKey: ["meal-plans", today] });
   }
@@ -91,7 +111,40 @@ export default function PlannerPage() {
                     <Icon className="h-4 w-4" />
                     <h2 className="font-medium">{label}</h2>
                   </div>
-                  <p className="text-sm text-slate-500">{item ? `Meal #${item.meal_id}` : "No meal planned"}</p>
+
+                  {item ? (
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{item.meal.name}</p>
+                        {item.meal.calories != null && (
+                          <p className="text-xs text-slate-500">{Math.round(item.meal.calories)} kcal</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-accent-600 hover:underline"
+                        onClick={() => assignMeal(type, null)}
+                      >
+                        Change
+                      </button>
+                    </div>
+                  ) : suggestionsLoading ? (
+                    <Skeleton className="h-10 rounded-lg" />
+                  ) : (
+                    <Select
+                      defaultValue=""
+                      onChange={(e) => e.target.value && assignMeal(type, Number(e.target.value))}
+                    >
+                      <option value="" disabled>
+                        Pick a suggestion
+                      </option>
+                      {suggestions?.map(({ meal, score }) => (
+                        <option key={meal.id} value={meal.id}>
+                          {meal.name} ({score})
+                        </option>
+                      ))}
+                    </Select>
+                  )}
                 </CardContent>
               </Card>
             );
