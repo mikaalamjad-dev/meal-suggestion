@@ -1,11 +1,22 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Coffee, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 
-const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
+const MEAL_SLOTS = [
+  { type: "breakfast", label: "Breakfast", icon: Coffee },
+  { type: "lunch", label: "Lunch", icon: Sun },
+  { type: "dinner", label: "Dinner", icon: Moon },
+] as const;
 
 interface MealPlanItem {
   meal_id: number;
@@ -43,33 +54,46 @@ export default function PlannerPage() {
 
   return (
     <section>
-      <h1 className="mb-4 text-xl font-semibold text-[--color-primary]">Daily Planner</h1>
-      <form onSubmit={saveTarget} className="mb-6 flex items-center gap-2">
-        <input
-          type="number"
-          placeholder="Target calories"
-          value={targetCalories}
-          onChange={(e) => setTargetCalories(e.target.value ? Number(e.target.value) : "")}
-          className="rounded-[--radius] border px-3 py-2"
-        />
-        <button type="submit" className="rounded-[--radius] bg-[--color-primary] px-3 py-2 text-sm text-white">
-          Save target
-        </button>
-      </form>
+      <PageHeader title="Daily Planner" description={new Date(today).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} />
+
+      <Card className="mb-6">
+        <CardContent className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <Label htmlFor="target">Target calories for today</Label>
+            <Input
+              id="target"
+              type="number"
+              placeholder="e.g. 2000"
+              value={targetCalories}
+              onChange={(e) => setTargetCalories(e.target.value ? Number(e.target.value) : "")}
+            />
+          </div>
+          <Button onClick={saveTarget} variant="accent">
+            Save target
+          </Button>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
-        <p className="text-sm text-gray-500">Loading...</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-card" />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {MEAL_SLOTS.map((slot) => {
-            const item = plan?.items.find((i) => i.meal_type === slot);
+          {MEAL_SLOTS.map(({ type, label, icon: Icon }) => {
+            const item = plan?.items.find((i) => i.meal_type === type);
             return (
-              <div key={slot} className="rounded-[--radius] border p-4">
-                <h2 className="mb-2 capitalize text-[--color-accent]">{slot}</h2>
-                <p className="text-sm text-gray-500">
-                  {item ? `Meal #${item.meal_id}` : "No meal planned"}
-                </p>
-              </div>
+              <Card key={type}>
+                <CardContent className="pt-4">
+                  <div className="mb-2 flex items-center gap-2 text-accent-600">
+                    <Icon className="h-4 w-4" />
+                    <h2 className="font-medium">{label}</h2>
+                  </div>
+                  <p className="text-sm text-slate-500">{item ? `Meal #${item.meal_id}` : "No meal planned"}</p>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

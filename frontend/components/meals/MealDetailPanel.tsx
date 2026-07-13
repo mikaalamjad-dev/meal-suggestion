@@ -1,64 +1,81 @@
 "use client";
 
+import { Flame, Heart } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { MealDetail } from "@/lib/types";
 
 export function MealDetailPanel({ meal }: { meal: MealDetail }) {
+  const [saved, setSaved] = useState(false);
+
   async function saveFavourite() {
     await api.post(`/favourites/${meal.id}`);
+    setSaved(true);
   }
 
   return (
     <article className="grid gap-6 md:grid-cols-2">
-      {meal.thumbnail_url && (
-        <Image
-          src={meal.thumbnail_url}
-          alt={meal.name}
-          width={480}
-          height={320}
-          className="w-full rounded-[--radius] object-cover"
-        />
-      )}
+      <div className="relative h-64 w-full overflow-hidden rounded-card bg-slate-100 md:h-full">
+        {meal.thumbnail_url && (
+          <Image src={meal.thumbnail_url} alt={meal.name} fill sizes="50vw" className="object-cover" />
+        )}
+      </div>
+
       <div>
-        <h1 className="text-2xl font-semibold text-[--color-primary]">{meal.name}</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-primary-500">{meal.name}</h1>
+        <p className="text-sm text-slate-500">
           {meal.category}
           {meal.area ? ` · ${meal.area}` : ""}
         </p>
         {meal.calories != null && (
-          <p className="mt-1 text-[--color-accent]">{Math.round(meal.calories)} kcal</p>
+          <p className="mt-2 inline-flex items-center gap-1 font-medium text-accent-600">
+            <Flame className="h-4 w-4" />
+            {Math.round(meal.calories)} kcal
+          </p>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {meal.dietary_tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-[--color-accent]/10 px-2 py-1 text-xs text-[--color-accent]">
-              {tag}
-            </span>
-          ))}
-        </div>
+        {meal.dietary_tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {meal.dietary_tags.map((tag) => (
+              <Badge key={tag} variant="accent">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
 
-        <h2 className="mt-4 font-medium">Ingredients</h2>
-        <ul className="list-inside list-disc text-sm">
-          {meal.ingredients.map((ing) => (
-            <li key={ing.name}>
-              {ing.name}
-              {ing.measure ? ` — ${ing.measure}` : ""}
-            </li>
-          ))}
-        </ul>
+        <Card className="mt-5">
+          <CardContent className="pt-4">
+            <h2 className="mb-2 font-medium text-slate-900">Ingredients</h2>
+            <ul className="grid grid-cols-1 gap-1.5 text-sm text-slate-600 sm:grid-cols-2">
+              {meal.ingredients.map((ing) => (
+                <li key={ing.name} className="flex justify-between gap-2 border-b border-slate-100 py-1 last:border-0">
+                  <span>{ing.name}</span>
+                  {ing.measure && <span className="text-slate-400">{ing.measure}</span>}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
 
-        <button
-          onClick={saveFavourite}
-          className="mt-4 rounded-[--radius] bg-[--color-primary] px-4 py-2 text-sm text-white"
-        >
-          Save to favourites
-        </button>
+        <Button onClick={saveFavourite} disabled={saved} variant={saved ? "outline" : "primary"} className="mt-5">
+          <Heart className={saved ? "h-4 w-4 fill-current" : "h-4 w-4"} />
+          {saved ? "Saved to favourites" : "Save to favourites"}
+        </Button>
       </div>
 
       {meal.instructions && (
-        <p className="whitespace-pre-line md:col-span-2">{meal.instructions}</p>
+        <Card className="md:col-span-2">
+          <CardContent className="pt-4">
+            <h2 className="mb-2 font-medium text-slate-900">Instructions</h2>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">{meal.instructions}</p>
+          </CardContent>
+        </Card>
       )}
     </article>
   );

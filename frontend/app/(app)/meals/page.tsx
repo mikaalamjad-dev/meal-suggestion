@@ -1,8 +1,11 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { MealGrid } from "@/components/meals/MealGrid";
+import { PageHeader } from "@/components/ui/page-header";
+import { Select } from "@/components/ui/select";
 import { useCategories, useMeals } from "@/hooks/useMeals";
 
 export default function MealsPage() {
@@ -13,28 +16,29 @@ export default function MealsPage() {
 
   return (
     <section>
-      <h1 className="mb-4 text-xl font-semibold text-[--color-primary]">Browse Meals</h1>
-      <div className="mb-4 flex gap-3">
-        <input
-          placeholder="Search meals..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="rounded-[--radius] border px-3 py-2"
-        />
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-[--radius] border px-3 py-2"
-        >
-          <option value="">All categories</option>
-          {categories?.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+      <PageHeader title="Browse Meals" description="Search the full meal catalogue by name or category." />
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            placeholder="Search meals..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/40"
+          />
+        </div>
+        <div className="sm:w-56">
+          <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">All categories</option>
+            {categories?.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
-      {isLoading ? <p className="text-sm text-gray-500">Loading...</p> : <MealGrid meals={data?.items ?? []} />}
+      <MealGrid meals={data?.items ?? []} loading={isLoading} />
     </section>
   );
 }

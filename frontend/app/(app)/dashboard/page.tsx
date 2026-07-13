@@ -1,9 +1,10 @@
+import { PageHeader } from "@/components/ui/page-header";
 import { SuggestionFeed } from "@/components/suggestions/SuggestionFeed";
 
 export default function DashboardPage() {
   return (
     <section>
-      <h1 className="mb-4 text-xl font-semibold text-[--color-primary]">My Suggestions</h1>
+      <PageHeader title="My Suggestions" description="Meals ranked for your profile, pantry, and preferences." />
       <SuggestionFeed />
     </section>
   );
